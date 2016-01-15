@@ -100,9 +100,10 @@ AppRegistry.registerComponent('swiper', () => swiper)
 
 | Prop  | Default  | Type | Description |
 | :------------ |:---------------:| :---------------:| :-----|
-| index | `0` | `number` | Index number of initial slide. |
+| index | | `number` | Show slide in this index. |
+| initialIndex | `0` | `number` | Index number of initial slide. Not applicable with `index`.|
 | pager | `true` | `boolean` | Show pager. |
-| onPageChange |  | `function` | Callback when page changes. |
+| onPageChange |  | `function` | Callback when page changes or change is requested if `index` is set. |
 | activeDotColor | `blue` | `string` | CSS color of the dot for the current page. |
 
 

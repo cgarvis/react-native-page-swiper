@@ -10,17 +10,20 @@ import React, {
 
 import Dots from './dots'
 
+const hasValue = v => v != null;
+
 export default class Swiper extends Component {
   static propTypes = {
     children: React.PropTypes.node.isRequired,
     index: React.PropTypes.number,
+    initialIndex: React.PropTypes.number,
     pager: React.PropTypes.bool,
     onPageChange: React.PropTypes.func,
     activeDotColor: React.PropTypes.string,
   }
 
   static defaultProps = {
-    index: 0,
+    initialIndex: 0,
     pager: true,
     onPageChange: () => {},
     activeDotColor: 'blue',
@@ -28,11 +31,20 @@ export default class Swiper extends Component {
 
   constructor(props) {
     super(props)
+    this.isControlled = hasValue(props.index);
+    var initial =  this.isControlled ? props.index : props.initialIndex;
 
     this.state = {
-      index: props.index,
-      scrollValue: new Animated.Value(props.index),
+      index: initial,
+      scrollValue: new Animated.Value(initial),
       viewWidth: Dimensions.get('window').width,
+    }
+  }
+
+  componentWillReceiveProps(nextProps) {
+    if (this.isControlled && nextProps.index !== this.state.index) {
+      this.goToPage(nextProps.index);
+      clearTimeout(this.revertSwipeTimer);
     }
   }
 
@@ -49,7 +61,18 @@ export default class Swiper extends Component {
         newIndex = newIndex - 1
       }
 
-      this.goToPage(newIndex)
+      this.props.onPageChange(newIndex);
+
+      if (this.isControlled) {
+        // If the parent does not update this.props.index within 50ms revert
+        // back to previous index. With 50ms we get nice bouncing effect.
+        this.revertSwipeTimer = setTimeout(() => {
+          this.goToPage(this.state.index);
+        }, 50);
+      } else {
+        this.goToPage(newIndex);
+      }
+
     }
 
     this._panResponder = PanResponder.create({
@@ -75,6 +98,10 @@ export default class Swiper extends Component {
     })
   }
 
+  componentWillUnmount() {
+    clearTimeout(this.revertSwipeTimer);
+  }
+
   goToPage(pageNumber) {
     // Don't scroll outside the bounds of the screens
     pageNumber = Math.max(0, Math.min(pageNumber, this.props.children.length - 1))
@@ -83,8 +110,6 @@ export default class Swiper extends Component {
     })
 
     Animated.spring(this.state.scrollValue, {toValue: pageNumber, friction: this.props.springFriction, tension: this.props.springTension}).start();
-
-    this.props.onPageChange(pageNumber)
   }
 
   handleLayout(event) {
