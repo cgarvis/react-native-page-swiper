@@ -38,6 +38,12 @@ export default class Swiper extends Component {
     };
   }
 
+  componentWillReceiveProps(props) {
+    if ((props.setIndex == 0 || props.setIndex) && props.setIndex != this.state.index) {
+      this.goToPage(props.setIndex);
+    }
+  }
+
   componentWillMount() {
     const release = (e, gestureState) => {
       const relativeGestureDistance = gestureState.dx / this.state.viewWidth;
